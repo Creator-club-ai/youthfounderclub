@@ -1,0 +1,48 @@
+import Image from "next/image";
+import Link from "next/link";
+
+export default function Hero() {
+    return (
+        <section className="hero">
+            <div className="container hero-grid">
+                <div className="hero-copy">
+                    <div className="eyebrow en animate-fade-up">Youth Founders Club</div>
+                    <h1 className="animate-fade-up delay-100">
+                        Momentum is
+                        <br />
+                        <span className="accent">everything.</span>
+                    </h1>
+                    <p className="lead ko animate-fade-up delay-200">
+                        서로의 가능성을 믿고 끝까지 지지하는 곳.<br />
+                        20대 창업가들이 모여 가장 힙하고 자유로운 연대를 만듭니다.
+                    </p>
+                    <div className="hero-cta animate-fade-up delay-300">
+                        <Link href="#join" className="btn btn-solid">
+                            Request Invite
+                        </Link>
+                        <Link href="#mission" className="btn btn-outline">
+                            Manifesto
+                        </Link>
+                    </div>
+
+
+
+                    <div className="hero-meta animate-fade-up delay-300">
+                        <div className="meta-item">
+                            <span className="meta-label">Style</span>
+                            <span className="meta-value">Member-led</span>
+                        </div>
+                        <div className="meta-item">
+                            <span className="meta-label">Base</span>
+                            <span className="meta-value">Seoul</span>
+                        </div>
+                        <div className="meta-item">
+                            <span className="meta-label">Always</span>
+                            <span className="meta-value">Open Momentum</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
