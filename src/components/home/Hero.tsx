@@ -14,7 +14,7 @@ export default function Hero() {
                     </h1>
                     <p className="lead ko animate-fade-up delay-200">
                         서로의 가능성을 믿고 끝까지 지지하는 곳.<br />
-                        20대 창업가들이 모여 가장 힙하고 자유로운 연대를 만듭니다.
+                        청년 창업가들이 모여 가장 힙하고 자유로운 연대를 만듭니다.
                     </p>
                     <div className="hero-cta animate-fade-up delay-300">
                         <Link href="#join" className="btn btn-solid">

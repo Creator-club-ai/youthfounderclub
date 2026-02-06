@@ -27,6 +27,7 @@
   padding: 0;
 }
 
+html,
 body {
   --font-en: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-ko: var(--font-noto), "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -37,6 +38,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   position: relative;
+  overflow-x: hidden;
 }
 
 /* Film Grain Texture Overlay */
@@ -457,81 +459,46 @@ h3 {
   /* Left align text */
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  /* Add subtle shadow since outer card is gone */
 }
 
-.card-visual:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+.visual-image {
+  z-index: 1;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.card-visual.visual-1 {
-  background: url('/grain-gradient-1.png') center/cover no-repeat;
+.card-visual:hover .visual-image {
+  transform: scale(1.05);
 }
 
-.card-visual.visual-2 {
-  background: url('/grain-gradient-2.png') center/cover no-repeat;
-}
-
-.card-visual.visual-3 {
-  background: url('/grain-gradient-3.png') center/cover no-repeat;
-}
-
-.card-visual.visual-4 {
-  background: url('/grain-gradient4.png') center/cover no-repeat;
-}
-
-.card-visual.visual-blend {
-  background: url('/grain-gradient-style-blend.png') center/cover no-repeat;
-}
-
-/* Glassmorphism Overlay */
+/* Glassmorphism/Dark Overlay */
 .card-visual::before {
   content: "";
   position: absolute;
   inset: 0;
-  /* Stronger gradient for visible shine/reflection */
-  background: linear-gradient(125deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 100%);
-  backdrop-filter: blur(4px) saturate(140%);
-  /* Reduced blur to keep detail, increased saturation */
-  -webkit-backdrop-filter: blur(4px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-bottom-color: rgba(255, 255, 255, 0.05);
-  /* Different border opacity for depth */
-  border-right-color: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-md);
-  z-index: 1;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.5) 100%);
+  z-index: 2;
+  transition: opacity 0.4s ease;
 }
 
-/* Localized Film Grain / Noise */
-.card-visual::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E");
-  opacity: 0.15;
-  mix-blend-mode: overlay;
+.card-visual:hover::before {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 100%);
 }
 
 .card-visual h3 {
   position: relative;
   z-index: 3;
-  /* Above glass/noise overlays */
   color: #fff;
   font-size: 1.4rem;
   font-weight: inherit;
-  /* Match original heading weight */
   letter-spacing: -0.02em;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   margin: 0;
 }
 
 .card-visual p {
   position: relative;
   z-index: 3;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
   font-size: 0.95rem;
   line-height: 1.5;
   margin: 0;
@@ -602,20 +569,14 @@ h3 {
 
 /* Rhythm Section Background */
 #rhythm {
-  background: url('/grain-gradient-3.png') center/cover no-repeat;
+  background: var(--bg);
+  /* Solid white background */
   position: relative;
 }
 
-/* Overlay to darken rhythm bg slightly for text contrast if needed, 
-   or just let the glass cards handle it. 
-   Let's add a pseudo-element to lighten it so it's not too dark/heavy relative to the white page */
 #rhythm::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.85);
-  /* Heavy wash to make it subtle */
-  z-index: 0;
+  content: none;
+  /* Removed overlay */
 }
 
 #rhythm .container {
@@ -625,17 +586,14 @@ h3 {
 
 /* Circle Section Background */
 #circle {
-  background: url('/grain-gradient-style-blend.png') center/cover no-repeat;
+  background: var(--bg);
+  /* Solid white background */
   position: relative;
 }
 
 #circle::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.9);
-  /* Very light wash */
-  z-index: 0;
+  content: none;
+  /* Removed overlay */
 }
 
 #circle .container {
@@ -644,38 +602,56 @@ h3 {
 }
 
 
-/* Reusable Glass Card */
+/* Reusable Glass Card (Now Minimal Card) */
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: var(--radius-md);
+  background: #fff;
+  /* Solid white */
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  /* Minimal border */
+  border-radius: 8px;
+  /* Sharper radius */
   padding: 32px;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.2s ease;
+  /* Fast border transition */
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
 .glass-card:hover {
-  transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-  border-color: rgba(255, 255, 255, 0.6);
+  transform: none;
+  /* No lift */
+  border-color: var(--ink);
+  /* Sharp black border on hover */
+  box-shadow: none;
+  /* No shadow */
 }
 
 .rhythm-steps {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-  /* Increased gap */
 }
 
 .step {
-  /* Using generic glass-card styles mainly, specific overrides here */
-  height: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+/* Specific Rhythm Gradients */
+.rhythm-1 {
+  background: url('/grain-gradient4.png') center/cover no-repeat;
+  border: none;
+}
+
+.rhythm-2 {
+  background: url('/grain-gradient-style-blend.png') center/cover no-repeat;
+  border: none;
+}
+
+.rhythm-3 {
+  background: url('/grain-gradient-3.png') center/cover no-repeat;
+  border: none;
 }
 
 .step h4 {
@@ -688,6 +664,28 @@ h3 {
   color: var(--muted);
   font-size: 0.95rem;
   line-height: 1.6;
+}
+
+/* Text overrides for gradient backgrounds */
+.rhythm-1 h4,
+.rhythm-2 h4,
+.rhythm-3 h4 {
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.rhythm-1 p,
+.rhythm-2 p,
+.rhythm-3 p {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.rhythm-1 .step-num,
+.rhythm-2 .step-num,
+.rhythm-3 .step-num {
+  color: #fff;
+  opacity: 0.9;
 }
 
 .step-num {
@@ -708,32 +706,27 @@ h3 {
 }
 
 .quote-glass {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: var(--radius-md);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  /* Sharper radius */
   padding: 32px;
-  transition: all 0.4s ease;
+  transition: border-color 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
 .quote-glass::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--accent);
-  opacity: 0.8;
+  content: none;
+  /* Removed accent strip */
 }
 
 .quote-glass:hover {
-  background: rgba(255, 255, 255, 0.8);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+  transform: none;
+  /* No lift */
+  border-color: var(--ink);
+  /* Sharp border */
+  box-shadow: none;
 }
 
 .quote-glass p {
@@ -884,101 +877,6 @@ h3 {
   .nav-cta {
     display: block;
   }
-
-  .mobile-menu-btn {
-    display: none;
-  }
-}
-
-.mobile-menu-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  z-index: 20;
-}
-
-.hamburger {
-  width: 24px;
-  height: 20px;
-  position: relative;
-  transition: all 0.3s ease-in-out;
-}
-
-.hamburger span {
-  display: block;
-  position: absolute;
-  height: 2px;
-  width: 100%;
-  background: var(--ink);
-  border-radius: 9px;
-  opacity: 1;
-  left: 0;
-  transform: rotate(0deg);
-  transition: .25s ease-in-out;
-}
-
-.hamburger span:nth-child(1) {
-  top: 0px;
-}
-
-.hamburger span:nth-child(2) {
-  top: 9px;
-}
-
-.hamburger span:nth-child(3) {
-  top: 18px;
-}
-
-.hamburger.open span:nth-child(1) {
-  top: 9px;
-  transform: rotate(135deg);
-}
-
-.hamburger.open span:nth-child(2) {
-  opacity: 0;
-  left: -60px;
-}
-
-.hamburger.open span:nth-child(3) {
-  top: 9px;
-  transform: rotate(-135deg);
-}
-
-.mobile-nav {
-  position: fixed;
-  top: 57px;
-  /* Height of nav */
-  left: 0;
-  width: 100%;
-  height: calc(100vh - 57px);
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(12px);
-  padding: 32px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 9;
-}
-
-.mobile-nav.open {
-  transform: translateX(0);
-}
-
-.mobile-nav-links {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: var(--ink);
-}
-
-.mobile-nav-links a {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  padding-bottom: 16px;
 }
 
 @media (max-width: 960px) {
