@@ -29,6 +29,7 @@
 
 html,
 body {
+  scroll-behavior: smooth;
   --font-en: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-ko: var(--font-noto), "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 
@@ -467,7 +468,7 @@ h3 {
 }
 
 .card-visual:hover .visual-image {
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 /* Glassmorphism/Dark Overlay */
@@ -506,52 +507,13 @@ h3 {
 }
 
 .card:hover .card-visual {
-  transform: scale(1.02);
+  transform: scale(1.01);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .card:hover {
-  /* Gradient Border Effect */
-  position: relative;
+  border-color: var(--ink);
   z-index: 1;
-}
-
-.card:hover::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  /* border width */
-  border-radius: var(--radius-md);
-  background: var(--gradient-energy);
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* Optional: Holographic shine on hover */
-.card::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 60%);
-  opacity: 0;
-  transform: rotate(30deg);
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-
-.card:hover::after {
-  opacity: 0.1;
 }
 
 .rhythm {
@@ -705,137 +667,117 @@ h3 {
   gap: 24px;
 }
 
-.quote-glass {
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
-  /* Sharper radius */
-  padding: 32px;
-  transition: border-color 0.2s ease;
+/* Minimal Quote Card */
+.quote-minimal {
+  padding: 0 0 0 32px;
+  border-left: 2px solid var(--ink);
+  border-top: none;
   position: relative;
-  overflow: hidden;
 }
 
-.quote-glass::before {
-  content: none;
-  /* Removed accent strip */
-}
-
-.quote-glass:hover {
-  transform: none;
-  /* No lift */
-  border-color: var(--ink);
-  /* Sharp border */
-  box-shadow: none;
-}
-
-.quote-glass p {
-  font-size: 1.1rem;
+.quote-minimal p {
+  font-size: 1.15rem;
   line-height: 1.6;
-  margin-bottom: 16px;
-  font-weight: 500;
+  margin-bottom: 20px;
+  font-weight: 400;
   color: var(--ink);
+  word-break: keep-all;
 }
 
-.quote-glass span {
-  display: block;
+.quote-minimal p::before {
+  content: "“";
   font-family: var(--font-en);
-  font-size: 0.85rem;
+  font-size: 3rem;
+  line-height: 0;
+  position: absolute;
+  top: 10px;
+  left: -20px;
+  color: var(--bg);
+  text-shadow: -1px 0 var(--ink), 0 1px var(--ink), 1px 0 var(--ink), 0 -1px var(--ink);
+  /* Outline effect */
+  opacity: 1;
+}
+
+.quote-minimal span {
+  display: block;
+  font-family: var(--font-ko);
+  font-size: 0.9rem;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 .join {
-  background: var(--ink);
+  background: #000;
+  /* High Contrast Black */
   color: #fff;
-  position: relative;
-  overflow: hidden;
+  padding: 120px 0;
 }
 
 .join .sublead {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .join-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 60px;
-  align-items: center;
+  gap: 80px;
+  align-items: start;
 }
 
-.join-panel-glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-lg);
-  padding: 48px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Accent glow inside join panel */
-.join-panel-glass::before {
-  content: "";
-  position: absolute;
-  top: -20%;
-  right: -20%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-  opacity: 0.15;
-  filter: blur(40px);
-  pointer-events: none;
+.join-panel-minimal {
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .join-form {
   display: grid;
-  gap: 24px;
+  gap: 32px;
 }
 
 .field {
   display: grid;
-  gap: 8px;
-  font-size: 0.95rem;
+  gap: 12px;
 }
 
 .field label {
-  font-weight: 600;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
-  /* Lighter label for dark bg */
+  font-family: var(--font-en);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
 }
 
+/* Underline Only Input */
 .field input {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  /* Very subtle fill */
-  border-radius: 8px;
-  padding: 16px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+  padding: 12px 0;
   font-family: var(--font-ko);
+  font-size: 1rem;
   color: #fff;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
 .field input:focus {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--accent);
   outline: none;
-  box-shadow: 0 0 0 4px rgba(255, 79, 0, 0.2);
+  border-color: #fff;
+  background: transparent;
+  box-shadow: none;
 }
 
 .field input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.2);
 }
 
 .join-meta {
-  display: grid;
-  gap: 12px;
-  margin-top: 18px;
+  margin-top: 32px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .footer {
@@ -974,7 +916,9 @@ h3 {
   }
 
   .step {
-    padding: 20px;
+    padding: 32px 24px;
+    aspect-ratio: auto;
+    min-height: 160px;
   }
 
   .join-panel {

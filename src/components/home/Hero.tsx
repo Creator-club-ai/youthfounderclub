@@ -20,8 +20,8 @@ export default function Hero() {
                         <Link href="#join" className="btn btn-solid">
                             Request Invite
                         </Link>
-                        <Link href="#mission" className="btn btn-outline">
-                            Manifesto
+                        <Link href="#events" className="btn btn-outline">
+                            View Events
                         </Link>
                     </div>
 
@@ -29,8 +29,8 @@ export default function Hero() {
 
                     <div className="hero-meta animate-fade-up delay-300">
                         <div className="meta-item">
-                            <span className="meta-label">Style</span>
-                            <span className="meta-value">Member-led</span>
+                            <span className="meta-label">Members</span>
+                            <span className="meta-value">100+</span>
                         </div>
                         <div className="meta-item">
                             <span className="meta-label">Base</span>

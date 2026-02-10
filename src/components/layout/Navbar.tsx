@@ -11,7 +11,7 @@ export default function Navbar() {
   return (
     <nav className="nav">
       <div className="container nav-inner">
-        <Link href="#top" className="brand">
+        <Link href="/" className="brand">
           <Image
             src="/logo-black.webp"
             alt="Youth Founder Club Logo"
@@ -24,17 +24,10 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="nav-links">
-          <Link href="#mission">Manifesto</Link>
-          <Link href="#rhythm">Rhythm</Link>
-          <Link href="#circle">Circle</Link>
-          <Link href="#join">Join</Link>
+          <Link href="/about">About</Link>
         </div>
 
-        <div className="nav-cta">
-          <Link href="#join" className="btn btn-solid">
-            Join the Club
-          </Link>
-        </div>
+
       </div>
     </nav>
   );

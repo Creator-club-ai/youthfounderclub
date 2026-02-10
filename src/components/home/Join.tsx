@@ -14,12 +14,7 @@ export default function Join() {
                         <span>— YFC</span>
                     </div>
                 </div>
-                <div className="join-panel-glass">
-                    <div className="panel-top">
-                        <span className="panel-tag" style={{ color: "var(--accent)", fontWeight: "bold" }}>
-                            Request Invite
-                        </span>
-                    </div>
+                <div className="join-panel-minimal">
                     <form className="join-form" action="#">
                         <div className="field">
                             <label>Name</label>
@@ -33,12 +28,14 @@ export default function Join() {
                             <label>Building what?</label>
                             <input type="text" placeholder="현재 빌딩 중인 것 한 문장" />
                         </div>
-                        <button className="btn btn-solid btn-wide">제출하기</button>
+                        <div style={{ marginTop: '32px' }}>
+                            <button className="btn btn-outline btn-wide" style={{ borderColor: '#fff', color: '#fff' }}>
+                                Request Invite
+                            </button>
+                        </div>
                     </form>
                     <div className="join-meta">
-                        <span className="meta-label" style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>
-                            * 멤버십은 간단한 인터뷰를 거쳐 승인됩니다.
-                        </span>
+                        * 멤버십은 간단한 인터뷰를 거쳐 승인됩니다.
                     </div>
                 </div>
             </div>

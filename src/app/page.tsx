@@ -2,6 +2,7 @@ import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/home/Hero";
 import Mission from "@/components/home/Mission";
 import Rhythm from "@/components/home/Rhythm";
+import Events from "@/components/home/Events";
 import Circle from "@/components/home/Circle";
 import Join from "@/components/home/Join";
 import Image from "next/image";
@@ -16,14 +17,15 @@ export default function Home() {
         <Hero />
         <Mission />
         <Rhythm />
+        <Events />
         <Circle />
-        <Join />
+        {/* <Join /> */}
       </main>
 
       <footer className="footer">
         <div className="container footer-inner">
           <div>
-            <div className="brand">
+            <Link href="/" className="brand">
               <Image
                 src="/logo-black.webp"
                 alt="Youth Founder Club Logo"
@@ -32,7 +34,7 @@ export default function Home() {
                 className="brand-logo"
                 style={{ objectFit: "contain", objectPosition: "left" }}
               />
-            </div>
+            </Link>
             <p className="footer-note">© 2024 Youth Founder Club.</p>
           </div>
           <div className="footer-links">
