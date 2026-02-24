@@ -90,7 +90,11 @@ export default async function EventDetailPage({ params }: PageProps) {
               alt={event.imageAlt}
               fill
               priority
-              style={{ objectFit: "cover", objectPosition: event.imagePosition || "center" }}
+              style={{
+                objectFit: "cover",
+                objectPosition: event.imagePosition || "center",
+                transform: `scale(${event.imageScale || 1.0})`
+              }}
             />
           </div>
 
