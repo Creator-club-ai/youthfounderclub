@@ -79,7 +79,7 @@ export default async function EventDetailPage({ params }: PageProps) {
           <div style={{
             position: "relative",
             width: "100%",
-            aspectRatio: "21 / 9",
+            aspectRatio: "16 / 9",
             borderRadius: "24px",
             overflow: "hidden",
             marginBottom: "80px",
@@ -169,9 +169,11 @@ export default async function EventDetailPage({ params }: PageProps) {
                     <Image
                       src={imgSrc}
                       alt={`Gallery image ${idx + 1}`}
-                      fill
-                      className="event-gallery-image"
+                      width={0}
+                      height={0}
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      style={{ width: "100%", height: "auto" }}
+                      className="event-gallery-image"
                     />
                   </div>
                 ))}
