@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { KAKAO_INVITE_URL } from "@/constants/links";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -11,7 +11,7 @@ export default function Navbar() {
   return (
     <nav className="nav">
       <div className="container nav-inner">
-        <Link href="/" className="brand">
+        <Link href="/" className="brand" aria-label="Youth Founder Club home">
           <Image
             src="/logo-black.webp"
             alt="Youth Founder Club Logo"
@@ -22,12 +22,31 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="nav-links">
-          <Link href="/about">About</Link>
+          <Link
+            href="/"
+            className={`nav-link ${pathname === "/" ? "is-active" : ""}`.trim()}
+          >
+            Home
+          </Link>
+          <Link
+            href="/events"
+            className={`nav-link ${pathname === "/events" ? "is-active" : ""}`.trim()}
+          >
+            Events
+          </Link>
         </div>
 
-
+        <div className="nav-cta">
+          <a
+            href={KAKAO_INVITE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-solid"
+          >
+            커뮤니티 참여하기
+          </a>
+        </div>
       </div>
     </nav>
   );

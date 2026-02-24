@@ -18,6 +18,7 @@ export default function Mission() {
                             src="/E1_05647.JPG"
                             alt="Solidarity"
                             fill
+                            sizes="(max-width: 960px) 90vw, 30vw"
                             className="visual-image"
                             style={{ objectFit: "cover", transform: "scale(1.1)" }}
                         />
@@ -31,6 +32,7 @@ export default function Mission() {
                             src="/E1_05706.JPG"
                             alt="Clarity"
                             fill
+                            sizes="(max-width: 960px) 90vw, 30vw"
                             className="visual-image"
                             style={{ objectFit: "cover", objectPosition: "70% center" }}
                         />
@@ -44,6 +46,7 @@ export default function Mission() {
                             src="/E1_05784.JPG"
                             alt="Rhythm"
                             fill
+                            sizes="(max-width: 960px) 90vw, 30vw"
                             className="visual-image"
                             style={{ objectFit: "cover" }}
                         />
