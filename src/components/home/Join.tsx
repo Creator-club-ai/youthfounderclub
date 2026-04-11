@@ -1,4 +1,4 @@
-import { KAKAO_INVITE_URL } from "@/constants/links";
+import Link from "next/link";
 
 export default function Join() {
     return (
@@ -24,13 +24,12 @@ export default function Join() {
                     <div className="join-panel-minimal" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingLeft: '40px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
                         <div className="join-form" style={{ width: '100%', maxWidth: '400px' }}>
                             <p className="ko" style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.9)', marginBottom: '32px', lineHeight: '1.6' }}>
-                                아래 버튼을 눌러 카카오톡 오픈채팅방에 참여하세요. 간단한 자기소개 후 바로 활동을 시작할 수 있습니다.
+                                멤버십에 가입하고 인사이트, 전문가 지원, 창업가 네트워크를 한 번에 누리세요.<br />
+                                선착순 30명 얼리버드 모집 중입니다.
                             </p>
 
-                            <a
-                                href={KAKAO_INVITE_URL}
-                                target="_blank"
-                                rel="noreferrer"
+                            <Link
+                                href="/membership"
                                 className="btn btn-wide"
                                 style={{
                                     background: '#fff',
@@ -44,15 +43,15 @@ export default function Join() {
                                     alignItems: 'center'
                                 }}
                             >
-                                초대 요청
+                                멤버십 보기
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
                                     <polyline points="12 5 19 12 12 19"></polyline>
                                 </svg>
-                            </a>
+                            </Link>
 
                             <div className="join-meta" style={{ marginTop: '24px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>
-                                * 카카오톡 프로필로 참여 가능합니다.
+                                * 월 29,400원 · 선착순 30명 · 4월 19일 마감
                             </div>
                         </div>
                     </div>

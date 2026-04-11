@@ -4,7 +4,7 @@ import Link from "next/link";
 const primaryLinks = [
   { href: "/about", label: "About" },
   { href: "/events", label: "Events" },
-  { href: "/#join", label: "Join" },
+  { href: "/membership", label: "Membership" },
 ];
 
 const policyLinks = [

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { KAKAO_INVITE_URL } from "@/constants/links";
 
 export default function Hero() {
     return (
@@ -17,14 +16,9 @@ export default function Hero() {
                         청년 창업가들이 모여 가장 힙하고 자유로운 연대를 만듭니다.
                     </p>
                     <div className="hero-cta animate-fade-up delay-300">
-                        <a
-                            href={KAKAO_INVITE_URL}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn btn-solid"
-                        >
-                            커뮤니티 참여하기
-                        </a>
+                        <Link href="/membership" className="btn btn-solid">
+                            멤버십 보기
+                        </Link>
                         <Link href="/events" className="btn btn-outline">
                             이벤트 보기
                         </Link>
@@ -33,7 +27,7 @@ export default function Hero() {
                     <div className="hero-meta animate-fade-up delay-300">
                         <div className="meta-item">
                             <span className="meta-label">Members</span>
-                            <span className="meta-value">200+</span>
+                            <span className="meta-value">400+</span>
                         </div>
                         <div className="meta-item">
                             <span className="meta-label">Base</span>

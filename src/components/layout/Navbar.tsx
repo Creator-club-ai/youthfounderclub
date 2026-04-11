@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { KAKAO_INVITE_URL } from "@/constants/links";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -35,17 +34,18 @@ export default function Navbar() {
           >
             Events
           </Link>
+          <Link
+            href="/membership"
+            className={`nav-link ${pathname === "/membership" ? "is-active" : ""}`.trim()}
+          >
+            Membership
+          </Link>
         </div>
 
         <div className="nav-cta">
-          <a
-            href={KAKAO_INVITE_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-solid"
-          >
-            커뮤니티 참여하기
-          </a>
+          <Link href="/membership" className="btn btn-solid">
+            멤버십 보기
+          </Link>
         </div>
       </div>
     </nav>
