@@ -11,6 +11,12 @@ export const metadata: Metadata = {
   title: "Youth Founder Club | Built for Solidarity",
   description:
     "A peer-led club where young founders show up, connect, and keep building together.",
+  openGraph: {
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
