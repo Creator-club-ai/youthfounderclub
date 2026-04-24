@@ -1724,6 +1724,11 @@ h3 {
   margin: 0 auto;
 }
 
+.ms-pricing-grid-single {
+  grid-template-columns: 1fr;
+  max-width: 480px;
+}
+
 .ms-pricing-card {
   border-radius: var(--radius-lg);
   padding: 52px 44px;

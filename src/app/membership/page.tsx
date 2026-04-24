@@ -5,7 +5,7 @@ import PartnerCard from "@/components/membership/PartnerCard";
 import type { ServiceItem } from "@/components/membership/PartnerCard";
 
 const PAYMENT_URL =
-  "https://www.latpeed.com/memberships/69d5f735a61d79c1debe4202/pay/6cdQP";
+  "https://www.latpeed.com/memberships/69d5f735a61d79c1debe4202/pay/AO07Z";
 
 const PARTNERS: {
   logo: string;
@@ -143,7 +143,7 @@ export default function MembershipPage() {
 
             <div className="ms-hero-cta animate-fade-up delay-300">
               <a href={PAYMENT_URL} target="_blank" rel="noreferrer" className="btn ms-cta-primary">
-                얼리버드 가입하기
+                지금 가입하기
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
@@ -157,10 +157,6 @@ export default function MembershipPage() {
               </a>
             </div>
 
-            <div className="ms-hero-badge animate-fade-up delay-300">
-              <span className="ms-badge-dot" />
-              <span className="ko">선착순 30명 · 얼리버드 4월 19일 마감</span>
-            </div>
           </div>
 
           {/* Decorative line */}
@@ -341,58 +337,30 @@ export default function MembershipPage() {
           <div className="container">
             <Reveal>
               <div className="section-head">
-                <div className="eyebrow en">Early Bird</div>
+                <div className="eyebrow en">Pricing</div>
                 <h2>
-                  First in gets
+                  Simple,
                   <br />
-                  the best deal.
+                  clear pricing.
                 </h2>
-                <p className="sublead ko">
-                  선착순 30명 · 모집 기간 4월 12일 — 4월 19일
-                </p>
               </div>
             </Reveal>
 
-            <div className="ms-pricing-grid">
+            <div className="ms-pricing-grid ms-pricing-grid-single">
               <Reveal delay={0}>
-                <div className="ms-pricing-card ms-pricing-regular">
-                  <div className="ms-pricing-tag en">Regular</div>
+                <div className="ms-pricing-card ms-pricing-earlybird">
+                  <div className="ms-pricing-tag en" style={{ color: "rgba(255,255,255,0.7)" }}>
+                    Membership
+                  </div>
                   <div className="ms-pricing-price">
                     <span className="ms-price-amount en">49,000</span>
-                    <span className="ms-price-unit ko">원 / 월</span>
-                  </div>
-                  <p className="ms-pricing-desc ko">얼리버드 기간 이후 정가</p>
-                  <ul className="ms-pricing-features ko">
-                    <li>인사이트 뉴스레터</li>
-                    <li>전문 파트너 혜택</li>
-                    <li>커뮤니티 네트워크</li>
-                    <li>YFC 행사 20% 할인</li>
-                  </ul>
-                </div>
-              </Reveal>
-
-              <Reveal delay={120}>
-                <div className="ms-pricing-card ms-pricing-earlybird">
-                  <div className="ms-pricing-badge en">EARLY BIRD</div>
-                  <div className="ms-pricing-tag en" style={{ color: "rgba(255,255,255,0.5)" }}>
-                    선착순 30명
-                  </div>
-                  <div className="ms-pricing-price">
-                    <span className="ms-price-amount en">29,400</span>
                     <span className="ms-price-unit ko" style={{ color: "rgba(255,255,255,0.5)" }}>원 / 월</span>
                   </div>
-                  <p className="ms-pricing-original ko">
-                    정가 <s>49,000원</s> 대비 40% 할인
-                  </p>
-                  <p className="ms-pricing-desc ko" style={{ color: "rgba(255,255,255,0.55)" }}>
-                    2026년 12월 31일까지 해당 가격 영구 동결
-                  </p>
                   <ul className="ms-pricing-features ko ms-pricing-features-dark">
                     <li>인사이트 뉴스레터</li>
                     <li>전문 파트너 혜택</li>
                     <li>커뮤니티 네트워크</li>
                     <li>YFC 행사 20% 할인</li>
-                    <li><strong>가격 영구 동결 보장</strong></li>
                   </ul>
                   <a
                     href={PAYMENT_URL}
@@ -406,7 +374,6 @@ export default function MembershipPage() {
                       <polyline points="12 5 19 12 12 19" />
                     </svg>
                   </a>
-                  <p className="ms-pricing-note ko">마감: 2025년 4월 19일 (일)</p>
                 </div>
               </Reveal>
             </div>
@@ -441,14 +408,14 @@ export default function MembershipPage() {
                     rel="noreferrer"
                     className="ms-final-btn"
                   >
-                    선착순 30명 얼리버드 가입하기
+                    지금 가입하기
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="5" y1="12" x2="19" y2="12" />
                       <polyline points="12 5 19 12 12 19" />
                     </svg>
                   </a>
                   <p className="ms-final-meta ko">
-                    월 29,400원 · 정가 49,000원 · 4월 19일 마감
+                    월 49,000원
                   </p>
                 </div>
               </div>
