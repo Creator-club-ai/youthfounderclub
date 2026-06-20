@@ -47,6 +47,8 @@ export default function InterviewForm() {
 
   function update<K extends keyof InterviewSubmission>(key: K, value: InterviewSubmission[K]) {
     setData((d) => ({ ...d, [key]: value }));
+    // 사용자가 다시 입력하면 직전 제출 에러 배너를 걷어낸다
+    setStatus((s) => (s === "error" ? "idle" : s));
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -68,7 +70,15 @@ export default function InterviewForm() {
       });
       const body = await res.json();
       if (!res.ok || !body.ok) {
-        if (body.errors) setErrors(body.errors);
+        if (body.errors) {
+          // 서버 검증 반려: 인라인 에러만 보여주고 일반 에러 배너는 띄우지 않는다
+          setErrors(body.errors);
+          setStatus("idle");
+          document
+            .querySelector('[data-error="true"]')
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
         setStatus("error");
         return;
       }

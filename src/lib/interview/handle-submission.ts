@@ -24,7 +24,8 @@ export async function handleSubmission(
 
   try {
     await deps.appendRow(buildSheetRow(data, deps.now()));
-  } catch {
+  } catch (e) {
+    console.error("[interview] 저장 실패:", e);
     return { status: 500, body: { ok: false, error: "저장 중 오류가 발생했어요." } };
   }
   return { status: 200, body: { ok: true } };
