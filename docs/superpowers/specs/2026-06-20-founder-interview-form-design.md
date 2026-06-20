@@ -10,22 +10,22 @@
 YouthFounderClub의 창업가들에게 인터뷰 링크를 보내고, 그들이 직접 작성한 답변을
 수집해 콘텐츠(인스타/숏폼/웹) 제작에 활용하기 위한 **수집형 폼**.
 
-제출 1건은 Notion DB에 **읽기 좋은 인터뷰 페이지 1개**로 쌓이고, 팀이 보드/갤러리
-뷰로 큐레이션해 콘텐츠로 가공한다.
+제출 1건은 Google Sheet에 **한 행**으로 쌓이고, 팀이 시트에서 필터·정렬로
+큐레이션해 콘텐츠로 가공한다.
 
 ## 2. 목표 / 비목표
 
 **목표 (v1)**
 - 기존 홈페이지와 같은 브랜드 톤의 커스텀 폼 (`/interview`)
 - 예시 인터뷰의 8개 문항 + 기본정보를 한 페이지에서 작성
-- 제출 → Notion DB 저장 (긴 답변은 페이지 본문 블록으로)
+- 제출 → Google Sheet에 한 행씩 저장 (Apps Script 웹앱 경유)
 - 작성 중 임시저장(localStorage)으로 긴 답변 유실 방지
 - 모바일 우선 반응형
 
 **비목표 (나중에)**
 - 자동 공개 인터뷰 페이지 생성/발행
 - 사진 **파일 업로드** (v1은 링크 입력만)
-- 별도 관리자 화면 (Notion이 대체)
+- 별도 관리자 화면 (Google Sheet가 대체)
 - 로그인/인증, 이메일/슬랙 알림
 
 ## 3. 아키텍처
@@ -38,21 +38,22 @@ YouthFounderClub의 창업가들에게 인터뷰 링크를 보내고, 그들이 
           │
 [서버: app/api/interview/route.ts (Node runtime)]
    ├─ 서버 재검증 + 허니팟 스팸 차단
-   ├─ formData → Notion 매핑 (속성 + 본문 블록, 긴 답변 청크 분할)
-   └─ @notionhq/client → pages.create(parent=DATABASE_ID)
+   ├─ formData → 시트 행(ordered string[]) 매핑
+   └─ Apps Script 웹앱으로 POST { row }
           │
-[Notion DB: 인터뷰 1건 = 페이지 1개]
+[Google Sheet: 인터뷰 1건 = 한 행]
 ```
 
 - 폼 페이지: `src/app/interview/page.tsx` (+ `interview.module.css`)
-- 폼 UI 컴포넌트: `src/components/interview/` (예: `InterviewForm.tsx`, `Field.tsx`, `SectionCard.tsx`)
+- 폼 UI 컴포넌트: `src/components/interview/InterviewForm.tsx` (내부에 `Field` 헬퍼)
 - API 라우트: `src/app/api/interview/route.ts`
 - 순수 로직(테스트 대상): `src/lib/interview/` 에 분리
   - `validate.ts` — 폼 검증 (순수 함수)
-  - `notion-mapping.ts` — formData → Notion properties + children blocks (순수 함수, 청크 분할 포함)
-  - `notion-client.ts` — Notion SDK 호출 래퍼 (사이드이펙트 격리)
+  - `sheet-mapping.ts` — formData → 시트 행(ordered string[]) (순수 함수)
+  - `handle-submission.ts` — 허니팟·검증·저장 흐름 (의존성 주입, 순수)
+  - `sheets-client.ts` — Apps Script 웹앱 POST 래퍼 (사이드이펙트 격리)
 
-각 유닛은 한 가지 책임만 가지고, 순수 로직은 SDK/네트워크와 분리해 독립적으로
+각 유닛은 한 가지 책임만 가지고, 순수 로직은 네트워크와 분리해 독립적으로
 테스트한다.
 
 ## 4. 폼 스키마 (필드)
@@ -84,23 +85,21 @@ YouthFounderClub의 창업가들에게 인터뷰 링크를 보내고, 그들이 
 각 문항은 여러 줄 textarea + 예시 답변을 **접힌 "예시 보기" 토글**(또는 옅은
 placeholder)로 제공해 작성 부담을 낮춘다.
 
-## 5. Notion 데이터 모델
+## 5. Google Sheet 데이터 모델
 
-**DB 속성 (Properties)** — 큐레이션/필터용 메타데이터
-- `이름` (Title) ← `name`
-- `아이템` (Rich text) ← `item`
-- `직함/소속` (Rich text) ← `role`
-- `이메일` (Email) ← `email`
-- `링크` (URL) ← `link`
-- `사진` (URL) ← `photoUrl`
-- `공개동의` (Checkbox) ← `consent`
-- `상태` (Select): `신규` / `검토중` / `콘텐츠제작` / `발행완료` / `보류` (기본 `신규`)
-- `제출일시` (Date) ← 서버 시각
+제출 1건 = 한 행. 헤더(1행) 컬럼 순서는 `sheet-mapping.ts`의 `SHEET_COLUMNS`와
+정확히 일치해야 한다:
 
-**페이지 본문 (children blocks)** — 읽기 좋은 인터뷰 문서
-- 문항마다: `Heading 2`(이모지+질문) + `Paragraph`(답변)
-- 답변이 Notion rich_text 한계(블록당 ~2000자)를 넘으면 **여러 단락 블록으로 청크
-  분할**. `notion-mapping.ts`가 처리.
+```
+제출일시 | 이름 | 직함/소속 | 아이템 | 이메일 | 링크 | 사진 | 공개동의 |
+자기소개 | 한줄소개 | 창업배경 | 가장힘들었던순간 | 터닝포인트 | 비전 | 인생목표 | 메시지
+```
+
+- `제출일시` ← 서버 시각(ISO)
+- `공개동의` ← `동의` / `""` (consent boolean)
+- 나머지 ← 해당 필드 문자열 그대로 (미작성은 빈 문자열)
+- 시트 셀 길이 한계가 넉넉(5만 자)하므로 긴 답변 청크 분할 불필요
+- 전송 경로: 서버 → Apps Script 웹앱(`doPost`) → `sheet.appendRow(row)`
 
 ## 6. UX 동작
 
@@ -125,38 +124,34 @@ placeholder)로 제공해 작성 부담을 낮춘다.
 ## 8. 설정 / 환경변수
 
 - `.env.local` (이미 `.gitignore`에 `.env*` 포함됨):
-  - `NOTION_TOKEN` — Notion 내부 인테그레이션 토큰
-  - `NOTION_DATABASE_ID` — 대상 DB ID
-- 프로덕션: 위 두 값을 Vercel 환경변수로 등록
-- 의존성 추가: `@notionhq/client`
+  - `SHEETS_WEBHOOK_URL` — Apps Script 웹앱 배포 URL
+- 프로덕션: 위 값을 Vercel 환경변수로 등록
+- 추가 런타임 의존성 없음 (`fetch`만 사용)
 
-**사용자(운영자)가 해야 할 Notion 준비** — 구현 전 1회:
-1. notion.so/my-integrations → 내부 인테그레이션 생성 → 토큰 복사
-2. Notion에 데이터베이스(표) 1개 생성, 5절의 속성 추가
-3. 그 DB의 `⋯ → 연결(Connections)`에 위 인테그레이션 추가(공유)
-4. DB URL에서 database ID 복사
-5. 토큰 + DB ID를 `.env.local`에 입력
-   *(원하면 구현 시 스키마 세팅을 일부 자동화 가능)*
+**사용자(운영자)가 해야 할 준비** — 구현 전 1회:
+1. Google Sheet 생성, 첫 시트명 `응답`, 1행에 5절 컬럼 순서대로 헤더 입력
+2. `확장 프로그램 → Apps Script`에서 `doPost`(JSON `row` append) 코드 배포
+3. `배포 → 웹 앱`(실행: 나 / 액세스: 모든 사용자) → 웹 앱 URL 복사
+4. URL을 `.env.local`의 `SHEETS_WEBHOOK_URL`에 입력
 
 ## 9. 보안 / 프라이버시
 
-- 이메일·연락처는 Notion에 **비공개**로 저장(웹에 노출 안 함)
+- 이메일·연락처는 Google Sheet에 **비공개**로 저장(웹에 노출 안 함)
 - 제출 전 **콘텐츠 사용·공개 동의** 체크 필수
-- `NOTION_TOKEN`은 서버에서만 사용(클라이언트 노출 금지)
+- `SHEETS_WEBHOOK_URL`은 서버에서만 사용(클라이언트 노출 금지)
 - 허니팟으로 기본 봇 차단(필요 시 추후 rate limit 추가)
 
 ## 10. 테스트 전략
 
-- **단위**: `validate.ts`(필수/이메일/동의 케이스), `notion-mapping.ts`(속성 매핑 +
-  긴 답변 청크 분할 경계값)
-- **API**: `/api/interview` 라우트 — Notion 클라이언트 목킹, 정상/검증실패/Notion에러
-  응답 검증
-- **수동**: 폼 작성→제출→Notion에 페이지 생성 확인, 임시저장 복원, 모바일 레이아웃
+- **단위**: `validate.ts`(필수/이메일/동의 케이스), `sheet-mapping.ts`(컬럼 순서·길이·
+  동의 표기·빈 답변), `handle-submission.ts`(허니팟/검증실패/저장성공/저장에러)
+- **수동**: 폼 작성→제출→Google Sheet에 행 추가 확인, 임시저장 복원, 모바일 레이아웃
+  (`route.ts`/`sheets-client.ts`는 수동 e2e로 검증)
 
 ## 11. 구현 순서(요약)
 
-1. 순수 로직 (`validate`, `notion-mapping`) + 테스트
-2. `notion-client` 래퍼 + API 라우트
+1. 순수 로직 (`validate`, `sheet-mapping`, `handle-submission`) + 테스트
+2. `sheets-client` 래퍼 + API 라우트
 3. 폼 UI 컴포넌트 + `/interview` 페이지 (브랜드 스타일)
 4. localStorage 임시저장 / 성공·에러 상태
 5. 로컬 e2e 수동 확인 → Vercel 환경변수 등록 → 배포

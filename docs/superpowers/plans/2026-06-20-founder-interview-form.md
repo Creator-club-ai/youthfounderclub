@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** `youthfounder.club/interview`에 기존 브랜드 톤의 커스텀 인터뷰 수집 폼을 만들고, 제출을 Notion DB에 읽기 좋은 페이지로 저장한다.
+**Goal:** `youthfounder.club/interview`에 기존 브랜드 톤의 커스텀 인터뷰 수집 폼을 만들고, 제출을 Google Sheet에 한 행씩 저장한다.
 
-**Architecture:** 클라이언트 폼(`/interview`)이 입력을 모아 `POST /api/interview`로 보낸다. 라우트는 얇은 글루이고, 실제 검증·Notion 매핑·저장 흐름은 의존성 주입형 순수 함수 `handleSubmission(data, deps)`에 모아 `next/server`·Notion 없이 단위 테스트한다. 긴 답변은 Notion 본문 블록으로 청크 분할 저장한다.
+**Architecture:** 클라이언트 폼(`/interview`)이 입력을 모아 `POST /api/interview`로 보낸다. 라우트는 얇은 글루이고, 실제 검증·행 매핑·저장 흐름은 의존성 주입형 순수 함수 `handleSubmission(data, deps)`에 모아 `next/server`·외부 네트워크 없이 단위 테스트한다. 저장은 Google Sheet에 연결된 Apps Script 웹앱으로 POST해 한 행씩 append한다.
 
-**Tech Stack:** Next.js 16 (App Router), React 19, TypeScript, `@notionhq/client`, Vitest. 경로 alias `@/*` → `./src/*`. 디자인 토큰은 `src/app/globals.css`의 `:root` 변수 재사용.
+**Tech Stack:** Next.js 16 (App Router), React 19, TypeScript, Vitest. 외부 저장은 Google Apps Script 웹앱 + `fetch`(추가 런타임 의존성 없음). 경로 alias `@/*` → `./src/*`. 디자인 토큰은 `src/app/globals.css`의 `:root` 변수 재사용.
 
 ---
 
@@ -17,20 +17,20 @@
 | `src/lib/interview/types.ts` | `InterviewSubmission`, `QuestionKey` 타입 |
 | `src/lib/interview/questions.ts` | 8개 문항 정의(이모지·라벨·필수·placeholder) |
 | `src/lib/interview/validate.ts` | 폼 검증 (순수 함수) |
-| `src/lib/interview/notion-mapping.ts` | formData → Notion properties/children, 청크 분할 (순수) |
+| `src/lib/interview/sheet-mapping.ts` | formData → 시트 행(ordered `string[]`) 매핑 (순수) |
 | `src/lib/interview/handle-submission.ts` | 허니팟·검증·저장 흐름 (의존성 주입, 순수) |
-| `src/lib/interview/notion-client.ts` | `@notionhq/client` 호출 래퍼 (env, 사이드이펙트 격리) |
+| `src/lib/interview/sheets-client.ts` | Apps Script 웹앱 POST 래퍼 (env, 사이드이펙트 격리) |
 | `src/app/api/interview/route.ts` | 얇은 POST 글루 |
 | `src/app/interview/page.tsx` | 페이지 + 메타데이터 (서버 컴포넌트) |
 | `src/components/interview/InterviewForm.tsx` | 클라이언트 폼 UI |
 | `src/components/interview/interview.module.css` | 폼 스타일 (토큰 재사용) |
 | `vitest.config.ts` | 테스트 설정 (`@` alias, node env) |
 
-테스트: 각 순수 모듈 옆에 `*.test.ts`. `route.ts`/`notion-client.ts`/UI는 수동 e2e로 검증.
+테스트: 각 순수 모듈 옆에 `*.test.ts`. `route.ts`/`sheets-client.ts`/UI는 수동 e2e로 검증.
 
 ---
 
-## Task 1: 툴링 셋업 (Vitest + Notion SDK)
+## Task 1: 툴링 셋업 (Vitest)
 
 **Files:**
 - Modify: `package.json`
@@ -40,10 +40,9 @@
 
 Run:
 ```bash
-npm install @notionhq/client
 npm install -D vitest
 ```
-Expected: 설치 성공, `package.json`에 두 패키지 추가됨.
+Expected: 설치 성공, `package.json`에 vitest devDependency 추가됨. (외부 저장은 Apps Script 웹앱이라 런타임 의존성 불필요.)
 
 - [ ] **Step 2: `package.json`에 test 스크립트 추가**
 
@@ -81,7 +80,7 @@ export default defineConfig({
 
 ```bash
 git add package.json package-lock.json vitest.config.ts
-git commit -m "chore: add vitest and notion sdk for interview form"
+git commit -m "chore: add vitest for interview form tests"
 ```
 
 ---
@@ -255,18 +254,18 @@ git commit -m "feat: add interview form validation"
 
 ---
 
-## Task 4: Notion 매핑 로직 (TDD)
+## Task 4: 시트 행 매핑 로직 (TDD)
 
 **Files:**
-- Create: `src/lib/interview/notion-mapping.ts`
-- Test: `src/lib/interview/notion-mapping.test.ts`
+- Create: `src/lib/interview/sheet-mapping.ts`
+- Test: `src/lib/interview/sheet-mapping.test.ts`
 
 - [ ] **Step 1: 실패하는 테스트 작성**
 
-`src/lib/interview/notion-mapping.test.ts`:
+`src/lib/interview/sheet-mapping.test.ts`:
 ```ts
 import { describe, it, expect } from "vitest";
-import { buildNotionPayload, chunkText, NOTION_TEXT_LIMIT } from "./notion-mapping";
+import { buildSheetRow, SHEET_COLUMNS } from "./sheet-mapping";
 import type { InterviewSubmission } from "./types";
 
 const data: InterviewSubmission = {
@@ -278,126 +277,77 @@ const data: InterviewSubmission = {
   q_vision: "", q_lifegoal: "", q_message: "",
 };
 
-describe("chunkText", () => {
-  it("returns a single chunk when under the limit", () => {
-    expect(chunkText("hello")).toEqual(["hello"]);
-  });
-  it("splits text longer than the limit", () => {
-    const long = "a".repeat(NOTION_TEXT_LIMIT + 50);
-    const chunks = chunkText(long);
-    expect(chunks).toHaveLength(2);
-    expect(chunks[0]).toHaveLength(NOTION_TEXT_LIMIT);
-    expect(chunks[1]).toHaveLength(50);
-  });
-});
-
-describe("buildNotionPayload", () => {
-  it("maps basic info to properties", () => {
-    const { properties } = buildNotionPayload(data, "2026-06-20T00:00:00.000Z");
-    expect(properties["이름"]).toEqual({ title: [{ text: { content: "이찬서" } }] });
-    expect(properties["이메일"]).toEqual({ email: "lee@example.com" });
-    expect(properties["공개동의"]).toEqual({ checkbox: true });
-    expect(properties["상태"]).toEqual({ select: { name: "신규" } });
-    expect(properties["제출일시"]).toEqual({ date: { start: "2026-06-20T00:00:00.000Z" } });
+describe("buildSheetRow", () => {
+  it("produces a row matching the column order and length", () => {
+    const row = buildSheetRow(data, "2026-06-20T00:00:00.000Z");
+    expect(row).toHaveLength(SHEET_COLUMNS.length);
+    expect(row[0]).toBe("2026-06-20T00:00:00.000Z"); // 제출일시
+    expect(row[1]).toBe("이찬서"); // 이름
+    expect(row[4]).toBe("lee@example.com"); // 이메일
+    expect(row[8]).toBe("안녕하세요"); // 자기소개
   });
 
-  it("uses null for empty url properties", () => {
-    const { properties } = buildNotionPayload(data, "2026-06-20T00:00:00.000Z");
-    expect(properties["사진"]).toEqual({ url: null });
+  it("writes 동의 for consent true and empty string for false", () => {
+    expect(buildSheetRow({ ...data, consent: true }, "t")[7]).toBe("동의");
+    expect(buildSheetRow({ ...data, consent: false }, "t")[7]).toBe("");
   });
 
-  it("creates heading + paragraph blocks only for answered questions", () => {
-    const { children } = buildNotionPayload(data, "2026-06-20T00:00:00.000Z");
-    expect(children).toHaveLength(4); // q_intro, q_oneliner: 각 heading+paragraph
-    expect(children[0]).toEqual({
-      heading_2: { rich_text: [{ text: { content: "🙋 자기소개" } }] },
-    });
-    expect(children[1]).toEqual({
-      paragraph: { rich_text: [{ text: { content: "안녕하세요" } }] },
-    });
-  });
-
-  it("splits a long answer into multiple paragraph blocks", () => {
-    const long = "가".repeat(NOTION_TEXT_LIMIT + 10);
-    const { children } = buildNotionPayload({ ...data, q_intro: long }, "2026-06-20T00:00:00.000Z");
-    expect(children).toHaveLength(5); // q_intro: heading+2단락, q_oneliner: heading+1단락
+  it("keeps empty answers as empty strings", () => {
+    const row = buildSheetRow(data, "t");
+    expect(row[10]).toBe(""); // 창업배경 (q_background, 미작성)
   });
 });
 ```
 
 - [ ] **Step 2: 테스트 실패 확인**
 
-Run: `npx vitest run src/lib/interview/notion-mapping.test.ts`
+Run: `npx vitest run src/lib/interview/sheet-mapping.test.ts`
 Expected: FAIL (모듈/함수 미정의).
 
-- [ ] **Step 3: `notion-mapping.ts` 구현**
+- [ ] **Step 3: `sheet-mapping.ts` 구현**
+
+> 컬럼 순서는 시트 헤더 행(Task 9)과 정확히 일치해야 함.
 
 ```ts
 import type { InterviewSubmission } from "./types";
-import { QUESTIONS } from "./questions";
 
-export const NOTION_TEXT_LIMIT = 2000;
+export const SHEET_COLUMNS = [
+  "제출일시", "이름", "직함/소속", "아이템", "이메일", "링크", "사진", "공개동의",
+  "자기소개", "한줄소개", "창업배경", "가장힘들었던순간", "터닝포인트", "비전", "인생목표", "메시지",
+] as const;
 
-export function chunkText(text: string, size = NOTION_TEXT_LIMIT): string[] {
-  if (text.length <= size) return [text];
-  const chunks: string[] = [];
-  for (let i = 0; i < text.length; i += size) chunks.push(text.slice(i, i + size));
-  return chunks;
-}
-
-function rich(content: string) {
-  return content ? [{ text: { content } }] : [];
-}
-
-export type NotionPayload = {
-  properties: Record<string, unknown>;
-  children: Record<string, unknown>[];
-};
-
-export function buildNotionPayload(
-  data: InterviewSubmission,
-  submittedAtISO: string,
-): NotionPayload {
-  const properties: Record<string, unknown> = {
-    "이름": { title: rich(data.name) },
-    "아이템": { rich_text: rich(data.item) },
-    "직함/소속": { rich_text: rich(data.role) },
-    "이메일": { email: data.email || null },
-    "링크": { url: data.link || null },
-    "사진": { url: data.photoUrl || null },
-    "공개동의": { checkbox: !!data.consent },
-    "상태": { select: { name: "신규" } },
-    "제출일시": { date: { start: submittedAtISO } },
-  };
-
-  const children: Record<string, unknown>[] = [];
-  for (const q of QUESTIONS) {
-    const answer = (data[q.key] ?? "").trim();
-    if (!answer) continue;
-    children.push({
-      heading_2: { rich_text: [{ text: { content: `${q.emoji} ${q.label}` } }] },
-    });
-    for (const chunk of chunkText(answer)) {
-      children.push({
-        paragraph: { rich_text: [{ text: { content: chunk } }] },
-      });
-    }
-  }
-
-  return { properties, children };
+export function buildSheetRow(data: InterviewSubmission, submittedAtISO: string): string[] {
+  return [
+    submittedAtISO,
+    data.name,
+    data.role,
+    data.item,
+    data.email,
+    data.link,
+    data.photoUrl,
+    data.consent ? "동의" : "",
+    data.q_intro,
+    data.q_oneliner,
+    data.q_background,
+    data.q_hardest,
+    data.q_turningpoint,
+    data.q_vision,
+    data.q_lifegoal,
+    data.q_message,
+  ];
 }
 ```
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `npx vitest run src/lib/interview/notion-mapping.test.ts`
-Expected: PASS (6 passed).
+Run: `npx vitest run src/lib/interview/sheet-mapping.test.ts`
+Expected: PASS (3 passed).
 
 - [ ] **Step 5: 커밋**
 
 ```bash
-git add src/lib/interview/notion-mapping.ts src/lib/interview/notion-mapping.test.ts
-git commit -m "feat: add notion payload mapping with long-answer chunking"
+git add src/lib/interview/sheet-mapping.ts src/lib/interview/sheet-mapping.test.ts
+git commit -m "feat: add sheet row mapping for interview submissions"
 ```
 
 ---
@@ -427,31 +377,31 @@ const now = () => "2026-06-20T00:00:00.000Z";
 
 describe("handleSubmission", () => {
   it("stores a valid submission and returns 200", async () => {
-    const createPage = vi.fn().mockResolvedValue(undefined);
-    const res = await handleSubmission(valid, { createPage, now });
+    const appendRow = vi.fn().mockResolvedValue(undefined);
+    const res = await handleSubmission(valid, { appendRow, now });
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true });
-    expect(createPage).toHaveBeenCalledOnce();
+    expect(appendRow).toHaveBeenCalledOnce();
   });
 
   it("returns 400 and skips storage on validation error", async () => {
-    const createPage = vi.fn();
-    const res = await handleSubmission({ ...valid, email: "bad" }, { createPage, now });
+    const appendRow = vi.fn();
+    const res = await handleSubmission({ ...valid, email: "bad" }, { appendRow, now });
     expect(res.status).toBe(400);
-    expect(createPage).not.toHaveBeenCalled();
+    expect(appendRow).not.toHaveBeenCalled();
   });
 
   it("silently ignores honeypot submissions", async () => {
-    const createPage = vi.fn();
-    const res = await handleSubmission({ ...valid, website: "spam" }, { createPage, now });
+    const appendRow = vi.fn();
+    const res = await handleSubmission({ ...valid, website: "spam" }, { appendRow, now });
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true });
-    expect(createPage).not.toHaveBeenCalled();
+    expect(appendRow).not.toHaveBeenCalled();
   });
 
   it("returns 500 when storage throws", async () => {
-    const createPage = vi.fn().mockRejectedValue(new Error("notion down"));
-    const res = await handleSubmission(valid, { createPage, now });
+    const appendRow = vi.fn().mockRejectedValue(new Error("sheets down"));
+    const res = await handleSubmission(valid, { appendRow, now });
     expect(res.status).toBe(500);
     expect(res.body.ok).toBe(false);
   });
@@ -468,10 +418,10 @@ Expected: FAIL (모듈/함수 미정의).
 ```ts
 import type { InterviewSubmission } from "./types";
 import { validateSubmission } from "./validate";
-import { buildNotionPayload, type NotionPayload } from "./notion-mapping";
+import { buildSheetRow } from "./sheet-mapping";
 
 export type SubmissionDeps = {
-  createPage: (payload: NotionPayload) => Promise<void>;
+  appendRow: (row: string[]) => Promise<void>;
   now: () => string;
 };
 
@@ -491,7 +441,7 @@ export async function handleSubmission(
   if (!ok) return { status: 400, body: { ok: false, errors } };
 
   try {
-    await deps.createPage(buildNotionPayload(data, deps.now()));
+    await deps.appendRow(buildSheetRow(data, deps.now()));
   } catch {
     return { status: 500, body: { ok: false, error: "저장 중 오류가 발생했어요." } };
   }
@@ -507,7 +457,7 @@ Expected: PASS (4 passed).
 - [ ] **Step 5: 전체 테스트 통과 확인**
 
 Run: `npm test`
-Expected: PASS (validate + notion-mapping + handle-submission, 총 15 passed).
+Expected: PASS (validate 5 + sheet-mapping 3 + handle-submission 4, 총 12 passed).
 
 - [ ] **Step 6: 커밋**
 
@@ -518,31 +468,28 @@ git commit -m "feat: add interview submission flow with honeypot and error handl
 
 ---
 
-## Task 6: Notion 클라이언트 + API 라우트
+## Task 6: Sheets 클라이언트 + API 라우트
 
 **Files:**
-- Create: `src/lib/interview/notion-client.ts`
+- Create: `src/lib/interview/sheets-client.ts`
 - Create: `src/app/api/interview/route.ts`
 
-- [ ] **Step 1: `notion-client.ts` 작성**
+- [ ] **Step 1: `sheets-client.ts` 작성**
 
 ```ts
-import { Client } from "@notionhq/client";
-import type { NotionPayload } from "./notion-mapping";
-
-export async function createInterviewPage(payload: NotionPayload): Promise<void> {
-  const token = process.env.NOTION_TOKEN;
-  const databaseId = process.env.NOTION_DATABASE_ID;
-  if (!token || !databaseId) {
-    throw new Error("NOTION_TOKEN / NOTION_DATABASE_ID 환경변수가 설정되지 않았습니다.");
+export async function appendSubmissionRow(row: string[]): Promise<void> {
+  const url = process.env.SHEETS_WEBHOOK_URL;
+  if (!url) {
+    throw new Error("SHEETS_WEBHOOK_URL 환경변수가 설정되지 않았습니다.");
   }
-  const notion = new Client({ auth: token });
-  await notion.pages.create({
-    parent: { database_id: databaseId },
-    // SDK 타입이 매우 엄격하므로 런타임 형태를 캐스팅
-    properties: payload.properties as never,
-    children: payload.children as never,
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ row }),
   });
+  if (!res.ok) {
+    throw new Error(`Sheets webhook 실패: ${res.status}`);
+  }
 }
 ```
 
@@ -551,7 +498,7 @@ export async function createInterviewPage(payload: NotionPayload): Promise<void>
 ```ts
 import { NextResponse } from "next/server";
 import { handleSubmission } from "@/lib/interview/handle-submission";
-import { createInterviewPage } from "@/lib/interview/notion-client";
+import { appendSubmissionRow } from "@/lib/interview/sheets-client";
 
 export const runtime = "nodejs";
 
@@ -563,14 +510,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "잘못된 요청이에요." }, { status: 400 });
   }
   const { status, body } = await handleSubmission(data, {
-    createPage: createInterviewPage,
+    appendRow: appendSubmissionRow,
     now: () => new Date().toISOString(),
   });
   return NextResponse.json(body, { status });
 }
 ```
 
-- [ ] **Step 3: 타입체크 + 빌드 확인**
+- [ ] **Step 3: 타입체크 확인**
 
 Run: `npx tsc --noEmit`
 Expected: 에러 없음.
@@ -578,8 +525,8 @@ Expected: 에러 없음.
 - [ ] **Step 4: 커밋**
 
 ```bash
-git add src/lib/interview/notion-client.ts src/app/api/interview/route.ts
-git commit -m "feat: add notion client and interview api route"
+git add src/lib/interview/sheets-client.ts src/app/api/interview/route.ts
+git commit -m "feat: add sheets webhook client and interview api route"
 ```
 
 ---
@@ -999,49 +946,56 @@ git commit -m "feat: add /interview page"
 
 ---
 
-## Task 9: Notion 연동 + 로컬 e2e + 배포
+## Task 9: Google Sheet 연동 + 로컬 e2e + 배포
 
-> 이 태스크는 운영자(사용자)의 Notion 계정 작업이 필요합니다. 막히면 사용자에게 토큰/DB 생성을 요청하세요.
+> 이 태스크는 운영자(사용자)의 Google 계정 작업이 필요합니다. 막히면 사용자에게 시트 생성/Apps Script 배포를 요청하세요.
 
-- [ ] **Step 1: Notion 인테그레이션 & DB 준비 (운영자)**
+- [ ] **Step 1: Google Sheet + 헤더 행 준비 (운영자)**
 
-1. https://www.notion.so/my-integrations → "New integration"(내부) 생성 → **Internal Integration Token** 복사
-2. Notion에 데이터베이스(표) 1개 생성. 속성을 정확히 이 이름/타입으로 추가:
-   - `이름` (Title, 기본 존재)
-   - `아이템` (Text)
-   - `직함/소속` (Text)
-   - `이메일` (Email)
-   - `링크` (URL)
-   - `사진` (URL)
-   - `공개동의` (Checkbox)
-   - `상태` (Select) — 옵션: `신규`, `검토중`, `콘텐츠제작`, `발행완료`, `보류`
-   - `제출일시` (Date)
-3. DB 페이지 우상단 `⋯ → Connections(연결) → 인테그레이션 추가`로 위 인테그레이션 공유
-4. DB URL에서 database ID 복사 (`notion.so/<workspace>/<DATABASE_ID>?v=...`의 32자리)
+1. 새 Google Sheet 생성, 첫 시트 이름을 `응답`으로 변경
+2. 1행(헤더)에 아래 순서 그대로 입력 (`sheet-mapping.ts`의 `SHEET_COLUMNS`와 일치해야 함):
+   `제출일시 | 이름 | 직함/소속 | 아이템 | 이메일 | 링크 | 사진 | 공개동의 | 자기소개 | 한줄소개 | 창업배경 | 가장힘들었던순간 | 터닝포인트 | 비전 | 인생목표 | 메시지`
 
-- [ ] **Step 2: 로컬 환경변수 설정**
+- [ ] **Step 2: Apps Script 웹앱 배포 (운영자)**
+
+1. 시트에서 `확장 프로그램 → Apps Script`
+2. 아래 코드 붙여넣기:
+```js
+function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("응답") || ss.getSheets()[0];
+  var data = JSON.parse(e.postData.contents);
+  sheet.appendRow(data.row);
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+```
+3. `배포 → 새 배포 → 유형: 웹 앱` / 실행: `나` / 액세스 권한: `모든 사용자` → 배포
+4. 발급된 **웹 앱 URL**(`https://script.google.com/macros/s/.../exec`) 복사
+
+- [ ] **Step 3: 로컬 환경변수 설정**
 
 `.env.local` 생성 (이미 `.gitignore`의 `.env*`로 제외됨):
 ```
-NOTION_TOKEN=ntn_xxx_또는_secret_xxx
-NOTION_DATABASE_ID=복사한_32자리_id
+SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/XXXX/exec
 ```
 
-- [ ] **Step 3: 로컬 e2e 수동 테스트**
+- [ ] **Step 4: 로컬 e2e 수동 테스트**
 
 Run: `npm run dev`
 브라우저에서 `http://localhost:3000/interview` 열고 확인:
 - [ ] 필수 미입력 제출 → 인라인 에러 + 첫 에러로 스크롤
 - [ ] 작성 중 새로고침 → 입력 내용 복원(임시저장)
-- [ ] 유효 입력 제출 → 성공 화면, Notion DB에 새 페이지(문항이 본문 블록으로) 생성 확인
+- [ ] 유효 입력 제출 → 성공 화면, Google Sheet에 새 행이 헤더 순서대로 추가됨
 - [ ] 모바일 뷰(devtools)에서 레이아웃 정상
 
-- [ ] **Step 4: 프로덕션 환경변수 등록 & 배포**
+- [ ] **Step 5: 프로덕션 환경변수 등록 & 배포**
 
-- Vercel 프로젝트 Settings → Environment Variables에 `NOTION_TOKEN`, `NOTION_DATABASE_ID` 추가
+- Vercel 프로젝트 Settings → Environment Variables에 `SHEETS_WEBHOOK_URL` 추가
 - 배포 후 `youthfounder.club/interview` 접속해 실제 제출 1건으로 최종 확인
 
-- [ ] **Step 5: 최종 커밋 (변경 있을 시)**
+- [ ] **Step 6: 최종 커밋 (변경 있을 시)**
 
 ```bash
 git add -A
@@ -1052,7 +1006,7 @@ git commit -m "chore: finalize interview form integration"
 
 ## 완료 기준 (Definition of Done)
 
-- `npm test` 전부 통과 (validate / notion-mapping / handle-submission)
+- `npm test` 전부 통과 (validate / sheet-mapping / handle-submission, 총 12)
 - `npm run build` 성공, `/interview` 라우트 생성
-- 로컬에서 유효 제출 시 Notion DB에 인터뷰 페이지 생성 확인
+- 로컬에서 유효 제출 시 Google Sheet에 새 행 추가 확인
 - 프로덕션 `youthfounder.club/interview`에서 제출 동작 확인
